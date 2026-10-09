@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Charge Alert</string>
+
+    <string name="battery_charging">Battery: %1$d%% (charging)</string>
+    <string name="battery_not_charging">Battery: %1$d%% (not charging)</string>
+    <string name="threshold_label">Alert when battery reaches %1$d%%</string>
+    <plurals name="interval_label">
+        <item quantity="one">Repeat every %1$d minute until unplugged</item>
+        <item quantity="other">Repeat every %1$d minutes until unplugged</item>
+    </plurals>
+    <string name="enable_monitoring">Monitoring enabled</string>
+    <string name="hint">Keep monitoring on and the app watches your battery in the background, even after a restart. Alerts stop as soon as you unplug the charger.</string>
+
+    <string name="channel_ongoing">Battery monitor</string>
+    <string name="channel_alert">Charge level alerts</string>
+    <string name="ongoing_title">Charge Alert is watching your battery</string>
+    <string name="status_unknown">Waiting for battery status…</string>
+    <string name="status_not_charging">%1$d%% · not charging</string>
+    <string name="status_charging">%1$d%% · charging, will alert at %2$d%%</string>
+    <string name="status_alerting">%1$d%% · alerting until unplugged</string>
+    <string name="status_silenced">%1$d%% · alerts silenced until unplugged</string>
+
+    <string name="alert_title">Battery at %1$d%% — unplug your charger</string>
+    <string name="alert_text">You\'ll be reminded every %1$d min until it\'s unplugged.</string>
+    <string name="action_silence">Stop until unplugged</string>
+</resources>
