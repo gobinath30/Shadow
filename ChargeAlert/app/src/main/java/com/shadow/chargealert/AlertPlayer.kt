@@ -67,9 +67,16 @@ class AlertPlayer(context: Context) {
         tts.shutdown()
     }
 
-    private fun playRingtone(thenSpeak: String?) {
+    private fun playRingtone(
+        thenSpeak: String?,
+        uri: Uri? = prefs.ringtoneUri?.let(Uri::parse) ?: defaultAlarmUri(),
+    ) {
         speechAfterRingtone = thenSpeak
-        val uri = prefs.ringtoneUri?.let(Uri::parse) ?: defaultAlarmUri()
+        if (uri == null) {
+            // No alarm or notification sound exists on this phone: just speak the message.
+            finishRingtone(speakAfter = true)
+            return
+        }
         val player = MediaPlayer()
         val started = runCatching {
             player.setAudioAttributes(ALARM_ATTRIBUTES)
@@ -82,9 +89,9 @@ class AlertPlayer(context: Context) {
             // The chosen sound can't be played (e.g. the file was deleted): fall back to the
             // default alarm, and if even that fails, go straight to the voice message.
             player.release()
-            if (uri != defaultAlarmUri() && defaultAlarmUri() != null) {
-                prefs.ringtoneUri = null
-                playRingtone(thenSpeak)
+            val fallback = defaultAlarmUri()
+            if (fallback != null && uri != fallback) {
+                playRingtone(thenSpeak, fallback)
             } else {
                 finishRingtone(speakAfter = true)
             }
