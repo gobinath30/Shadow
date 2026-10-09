@@ -10,8 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
-import android.media.AudioAttributes
-import android.media.RingtoneManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
@@ -33,6 +31,7 @@ class ChargeMonitorService : Service() {
 
     private lateinit var prefs: Prefs
     private lateinit var notificationManager: NotificationManager
+    private lateinit var alertPlayer: AlertPlayer
     private val handler = Handler(Looper.getMainLooper())
 
     private var level = -1
@@ -66,6 +65,7 @@ class ChargeMonitorService : Service() {
         super.onCreate()
         prefs = Prefs(this)
         notificationManager = getSystemService(NotificationManager::class.java)
+        alertPlayer = AlertPlayer(this)
         createChannels(this)
 
         ServiceCompat.startForeground(
@@ -91,6 +91,7 @@ class ChargeMonitorService : Service() {
         when (intent?.action) {
             ACTION_SILENCE -> {
                 silenced = true
+                alertPlayer.stop()
                 evaluate()
             }
             ACTION_SETTINGS_CHANGED -> {
@@ -108,6 +109,7 @@ class ChargeMonitorService : Service() {
     override fun onDestroy() {
         unregisterReceiver(batteryReceiver)
         stopAlerting()
+        alertPlayer.release()
         super.onDestroy()
     }
 
@@ -147,6 +149,7 @@ class ChargeMonitorService : Service() {
         alerting = false
         handler.removeCallbacks(repeatAlert)
         notificationManager.cancel(ALERT_ID)
+        alertPlayer.stop()
         wakeLock?.let { if (it.isHeld) it.release() }
         wakeLock = null
     }
@@ -159,7 +162,7 @@ class ChargeMonitorService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = NotificationCompat.Builder(this, CHANNEL_ALERT)
-            .setSmallIcon(R.drawable.ic_battery)
+            .setSmallIcon(R.drawable.ic_stat_battery)
             .setContentTitle(getString(R.string.alert_title, level))
             .setContentText(getString(R.string.alert_text, prefs.intervalMinutes))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -168,9 +171,10 @@ class ChargeMonitorService : Service() {
             .addAction(0, getString(R.string.action_silence), silenceIntent)
             .setAutoCancel(true)
             .build()
-        // Cancel first so the notification makes sound again even if the old one is still showing.
+        // Cancel first so the notification vibrates again even if the old one is still showing.
         notificationManager.cancel(ALERT_ID)
         notificationManager.notify(ALERT_ID, notification)
+        alertPlayer.play(level)
     }
 
     private fun buildOngoingNotification(): Notification {
@@ -182,7 +186,7 @@ class ChargeMonitorService : Service() {
             else -> getString(R.string.status_not_charging, level)
         }
         return NotificationCompat.Builder(this, CHANNEL_ONGOING)
-            .setSmallIcon(R.drawable.ic_battery)
+            .setSmallIcon(R.drawable.ic_stat_battery)
             .setContentTitle(getString(R.string.ongoing_title))
             .setContentText(status)
             .setOngoing(true)
@@ -203,7 +207,9 @@ class ChargeMonitorService : Service() {
 
     companion object {
         const val CHANNEL_ONGOING = "monitor"
-        const val CHANNEL_ALERT = "charge_alert"
+        // Version 1 of the alert channel had its own sound; sound is now played by AlertPlayer.
+        private const val OLD_CHANNEL_ALERT = "charge_alert"
+        const val CHANNEL_ALERT = "charge_alert_v2"
         private const val ONGOING_ID = 1
         private const val ALERT_ID = 2
         private const val MAX_WAKE_LOCK_MILLIS = 12 * 60 * 60 * 1000L
@@ -240,15 +246,10 @@ class ChargeMonitorService : Service() {
             ).apply {
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 500, 300, 500, 300, 500)
-                setSound(
-                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build(),
-                )
+                // AlertPlayer plays the ringtone and voice, so the notification itself is silent.
+                setSound(null, null)
             }
+            nm.deleteNotificationChannel(OLD_CHANNEL_ALERT)
             nm.createNotificationChannels(listOf(ongoing, alert))
         }
     }

@@ -12,6 +12,24 @@
     <string name="enable_monitoring">Monitoring enabled</string>
     <string name="hint">Keep monitoring on and the app watches your battery in the background, even after a restart. Alerts stop as soon as you unplug the charger.</string>
 
+    <string name="section_sound">Alert sound</string>
+    <string name="sound_both">Ringtone, then voice message</string>
+    <string name="sound_ringtone">Ringtone only</string>
+    <string name="sound_voice">Voice message only</string>
+    <string name="ringtone_current">Ringtone: %1$s</string>
+    <string name="ringtone_default">Default alarm sound</string>
+    <string name="ringtone_unknown">Selected sound</string>
+    <string name="pick_ringtone">Phone tones</string>
+    <string name="pick_file">Audio file</string>
+    <string name="pick_ringtone_title">Choose alert tone</string>
+
+    <string name="section_voice">Voice message</string>
+    <string name="presets_hint">Tap a ready-made message, or write your own below.</string>
+    <string name="note_hint">Message to read aloud</string>
+    <string name="note_helper">Write {level} to have the battery percentage spoken.</string>
+    <string name="test_alert">Test alert</string>
+    <string name="stop_test">Stop</string>
+
     <string name="channel_ongoing">Battery monitor</string>
     <string name="channel_alert">Charge level alerts</string>
     <string name="ongoing_title">Charge Alert is watching your battery</string>
